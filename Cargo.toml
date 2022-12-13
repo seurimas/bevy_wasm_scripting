@@ -1,0 +1,15 @@
+[package]
+name = "bevy_wasmer_scripting"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "bevy_wasmer_scripting"
+path = "src/lib.rs"
+
+[dependencies]
+wasmer = "3.0"
+wat = "1.0"
+anyhow = "1.0"
+wasmer-compiler-cranelift = "3.0"
+bevy = "0.9"
