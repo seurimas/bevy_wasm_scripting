@@ -1,5 +1,5 @@
 use bevy::{prelude::*, DefaultPlugins};
-use bevy_wasmer_scripting::{
+use bevy_wasm_scripting::{
     WasmPlugin, WasmScript, WasmScriptComponent, WasmScriptComponentAdder, WasmerStore,
     WorldPointer,
 };

@@ -1,10 +1,10 @@
 [package]
-name = "bevy_wasmer_scripting"
+name = "bevy_wasm_scripting"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "bevy_wasmer_scripting"
+name = "bevy_wasm_scripting"
 path = "src/lib.rs"
 
 [dependencies]
