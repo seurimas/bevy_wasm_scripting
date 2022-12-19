@@ -5,7 +5,7 @@ use wasmer::{Cranelift, Store};
 pub struct WasmerStore(pub Store);
 
 impl FromWorld for WasmerStore {
-    fn from_world(world: &mut World) -> Self {
+    fn from_world(_world: &mut World) -> Self {
         WasmerStore(Store::new(Cranelift::default()))
     }
 }

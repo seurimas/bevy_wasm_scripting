@@ -6,11 +6,13 @@ extern crate wasmer;
 extern crate wat;
 
 mod assets;
+mod calls;
 mod components;
 mod resources;
 mod world_pointer;
 
 pub use assets::WasmScript;
+pub use calls::{GeneralWasmScriptEnv, WasmScriptComponentEnv, WasmScriptEnv};
 use components::instantiate_wasm_scripts;
 pub use components::WasmScriptComponent;
 pub use resources::WasmerStore;

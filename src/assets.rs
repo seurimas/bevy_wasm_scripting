@@ -6,7 +6,7 @@ use bevy::{
     reflect::TypeUuid,
     utils::BoxedFuture,
 };
-use wasmer::{wat2wasm, FromToNativeWasmType, Imports, Instance, Module};
+use wasmer::{wat2wasm, Imports, Instance, Module};
 
 use crate::resources::WasmerStore;
 
@@ -18,8 +18,6 @@ However, for a WasmScript to become Instantiated and used, you must do one of th
 * Implement a WasmScriptComponent; register that component with add_wasm_script_component; and then
 add a component of that type, with the asset handle associated as per get_wasm_script_handle.
 * Call instantiate_if_compiled on the WasmScript directly (useful for scripts that have no entity).
-
-The call_if_instantiated method can be used to call an exported WASM function from a system.
 */
 #[derive(Debug, TypeUuid)]
 #[uuid = "a0150d40-bffa-487c-ba73-736dc035120e"]
@@ -44,33 +42,6 @@ impl WasmScript {
             }
         } else {
             false
-        }
-    }
-
-    pub fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
-        &self,
-        wasmer_store: &mut WasmerStore,
-        function_name: &str,
-        args: Args,
-    ) -> Result<Rets, anyhow::Error> {
-        if let WasmScript::Instantiated(_, instance) = self {
-            if let Some(exported) = instance
-                .exports
-                .get_function(function_name)
-                .ok()
-                .and_then(|export| export.typed::<Args, Rets>(&mut wasmer_store.0).ok())
-            {
-                exported
-                    .call(&mut wasmer_store.0, args)
-                    .map_err(anyhow::Error::new)
-            } else {
-                Err(anyhow::Error::msg(format!(
-                    "{} is not exported correctly.",
-                    function_name
-                )))
-            }
-        } else {
-            Err(anyhow::Error::msg("Not instantiated"))
         }
     }
 }

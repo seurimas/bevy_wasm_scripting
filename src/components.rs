@@ -1,9 +1,30 @@
-use bevy::{ecs::event::ManualEventReader, prelude::*, utils::HashSet};
+use bevy::{
+    ecs::{event::ManualEventReader, query::WorldQuery, system::SystemParam},
+    prelude::*,
+    utils::HashSet,
+};
 use wasmer::{imports, Imports, Instance, Module};
 
 use crate::{resources::WasmerStore, world_pointer::WorldPointer, WasmScript};
 
+/** The WasmScriptComponent represents the configuration point for component-based scripts.
+A WasmScriptComponent should have an associated handle, which is returned by `get_wasm_script_handle`.
+
+Each WasmScriptComponent can define its own set of imports, by defining `get_imports_from_world`.
+When defining imports which reference the provided `WorldPointer`, you should include a list of
+queried components in `ImportQueriedComponents`, and any referenced resources in `ImportedResources`.
+If your system uses the components or resources, care should be taken to avoid safety issues related
+to concurrent access to those components.
+
+If you are not defining imports or not using the provided `WorldPointer`, both `ImportResources` and
+`ImportQueriedComponents` can be set to `()`.
+
+`WasmScriptComponent` types should be registered with the App, using `add_wasm_script_component`.
+ */
 pub trait WasmScriptComponent: Component {
+    type ImportQueriedComponents: WorldQuery;
+    type ImportResources: SystemParam;
+
     fn get_imports_from_world(_wasmer_store: &mut WasmerStore, _world: &WorldPointer) -> Imports {
         // No imports, nothing to do.
         imports! {}
@@ -17,7 +38,6 @@ pub trait WasmScriptComponent: Component {
         module: &Module,
     ) -> Result<Instance, anyhow::Error> {
         let imports = Self::get_imports_from_world(wasmer_store, world_pointer);
-        println!("{:?}", imports);
         let instance = Instance::new(&mut wasmer_store.0, module, &imports)?;
         Ok(instance)
     }

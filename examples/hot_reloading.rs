@@ -1,6 +1,7 @@
 use bevy::{prelude::*, DefaultPlugins};
 use bevy_wasm_scripting::{
-    WasmPlugin, WasmScript, WasmScriptComponent, WasmScriptComponentAdder, WasmerStore,
+    GeneralWasmScriptEnv, WasmPlugin, WasmScript, WasmScriptComponent, WasmScriptComponentAdder,
+    WasmScriptComponentEnv,
 };
 
 fn main() {
@@ -23,6 +24,9 @@ struct AdderScript {
 }
 
 impl WasmScriptComponent for AdderScript {
+    type ImportQueriedComponents = ();
+    type ImportResources = ();
+
     fn get_wasm_script_handle(&self) -> &Handle<WasmScript> {
         &self.handle
     }
@@ -30,23 +34,22 @@ impl WasmScriptComponent for AdderScript {
 
 fn spawn_script_entity(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(AdderScript {
-        handle: asset_server.load("add_n.wat"),
+        handle: asset_server.load("edit_me.wat"),
         accumulator: 0,
     });
 }
 
 fn call_script_on_entity(
     mut scripted_entities: Query<&mut AdderScript>,
-    mut wasmer_store: ResMut<WasmerStore>,
-    wasm_scripts: ResMut<Assets<WasmScript>>,
+    mut script_env: WasmScriptComponentEnv<AdderScript, ()>,
 ) {
     for mut scripted_entity in scripted_entities.iter_mut() {
-        if let Some(script) = wasm_scripts.get(&mut scripted_entity.handle) {
-            if let Ok(new_val) =
-                script.call_if_instantiated(&mut wasmer_store, "main", scripted_entity.accumulator)
-            {
-                scripted_entity.accumulator = new_val;
-            }
+        if let Ok(new_val) = script_env.call_if_instantiated(
+            &scripted_entity.handle,
+            "main",
+            scripted_entity.accumulator,
+        ) {
+            scripted_entity.accumulator = new_val;
         }
         println!("Accumulated value: {}", scripted_entity.accumulator);
     }
