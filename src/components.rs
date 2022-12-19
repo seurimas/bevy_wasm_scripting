@@ -13,8 +13,9 @@ A WasmScriptComponent should have an associated handle, which is returned by `ge
 Each WasmScriptComponent can define its own set of imports, by defining `get_imports_from_world`.
 When defining imports which reference the provided `WorldPointer`, you should include a list of
 queried components in `ImportQueriedComponents`, and any referenced resources in `ImportedResources`.
-If your system uses the components or resources, care should be taken to avoid safety issues related
-to concurrent access to those components.
+
+SAFETY: If your system uses the components or resources, care should be taken to avoid safety issues
+related to concurrent access to those components.
 
 If you are not defining imports or not using the provided `WorldPointer`, both `ImportResources` and
 `ImportQueriedComponents` can be set to `()`.

@@ -13,11 +13,18 @@ use crate::WasmerStore;
 /**
 A WasmScript assets represented a single, eventually-instantiated WASM script. All WasmScript assets
 are automatically compiled by the compile_wasm_scripts system, and may come from .wat or .wasm files.
+Ideally, scripts should be loaded early so they can be compiled during a loading stage. Compilation
+can take some time.
 
 However, for a WasmScript to become Instantiated and used, you must do one of the following:
-* Implement a WasmScriptComponent; register that component with add_wasm_script_component; and then
-add a component of that type, with the asset handle associated as per get_wasm_script_handle.
-* Call instantiate_if_compiled on the WasmScript directly (useful for scripts that have no entity).
+* Implement a WasmScriptComponent; register that component with `add_wasm_script_component`; and then
+add a component of that type, with the asset handle associated as per `get_wasm_script_handle`.
+* For resource-based scripts, add a system to your app, using `instantiate_resource_script`.
+* Call `instantiate_if_compiled` on the WasmScript directly. This will not work with hot reloading.
+
+Hot reloading is enabled for component and resource-based scripts, though there will be 1-2 frames in
+which the asset is in the `Loaded` or `Compiled` state and will not run. `call_if_instantiated` will
+simply skip these scripts.
 */
 #[derive(Debug, TypeUuid)]
 #[uuid = "a0150d40-bffa-487c-ba73-736dc035120e"]
