@@ -1,5 +1,5 @@
 use assets::{compile_wasm_scripts, WasmAssetLoader, WatAssetLoader};
-use bevy::prelude::{AddAsset, App, CoreStage, Plugin};
+use bevy::prelude::{AddAsset, App, CoreStage, FromWorld, Plugin, Resource, World};
 
 extern crate anyhow;
 extern crate wasmer;
@@ -15,8 +15,21 @@ pub use assets::WasmScript;
 pub use calls::{GeneralWasmScriptEnv, WasmScriptComponentEnv, WasmScriptEnv};
 use components::instantiate_wasm_scripts;
 pub use components::WasmScriptComponent;
-pub use resources::WasmerStore;
+pub use resources::instantiate_resource_script;
+use wasmer::{Cranelift, Store};
 pub use world_pointer::WorldPointer;
+
+/** The `WasmerStore` is an essential item for the use of wasm scripts. However, it should not
+be referenced directly by systems. `WasmScriptEnv` and `WasmScriptComponentEnv` are better entry
+points for running scripts. */
+#[derive(Resource)]
+pub struct WasmerStore(pub Store);
+
+impl FromWorld for WasmerStore {
+    fn from_world(_world: &mut World) -> Self {
+        WasmerStore(Store::new(Cranelift::default()))
+    }
+}
 
 #[derive(Default)]
 pub struct WasmPlugin;

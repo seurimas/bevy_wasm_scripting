@@ -8,7 +8,7 @@ use bevy::{
 };
 use wasmer::{wat2wasm, Imports, Instance, Module};
 
-use crate::resources::WasmerStore;
+use crate::WasmerStore;
 
 /**
 A WasmScript assets represented a single, eventually-instantiated WASM script. All WasmScript assets

@@ -1,7 +1,7 @@
 use bevy::{prelude::*, DefaultPlugins};
 use bevy_wasm_scripting::{
-    GeneralWasmScriptEnv, WasmPlugin, WasmScript, WasmScriptComponent, WasmScriptComponentAdder,
-    WasmScriptComponentEnv, WasmScriptEnv, WasmerStore,
+    instantiate_resource_script, GeneralWasmScriptEnv, WasmPlugin, WasmScript, WasmScriptComponent,
+    WasmScriptComponentAdder, WasmScriptComponentEnv, WasmScriptEnv,
 };
 
 fn main() {
@@ -10,6 +10,10 @@ fn main() {
         .add_plugin(WasmPlugin)
         .add_startup_system(spawn_script_entity)
         .add_startup_system(add_script_resource)
+        .add_system(instantiate_resource_script::<AdderResourceScript>(
+            |resource: &AdderResourceScript| Some(resource.handle.clone()),
+            |_wasmer_store, _world_pointer| None,
+        ))
         .add_system(call_script_on_resource)
         .add_system(call_script_on_entity)
         .add_wasm_script_component::<AdderScript>()
@@ -49,7 +53,8 @@ fn spawn_script_entity(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn add_script_resource(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(AdderResourceScript {
-        handle: asset_server.load("add_one.wat"),
+        // We're using a separate asset here, to demonstrate how to instantiate a script manually.
+        handle: asset_server.load("add_one_for_resource.wat"),
         accumulator: 0,
     });
 }

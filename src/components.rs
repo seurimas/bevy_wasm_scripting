@@ -5,7 +5,7 @@ use bevy::{
 };
 use wasmer::{imports, Imports, Instance, Module};
 
-use crate::{resources::WasmerStore, world_pointer::WorldPointer, WasmScript};
+use crate::{world_pointer::WorldPointer, WasmScript, WasmerStore};
 
 /** The WasmScriptComponent represents the configuration point for component-based scripts.
 A WasmScriptComponent should have an associated handle, which is returned by `get_wasm_script_handle`.
@@ -19,7 +19,9 @@ to concurrent access to those components.
 If you are not defining imports or not using the provided `WorldPointer`, both `ImportResources` and
 `ImportQueriedComponents` can be set to `()`.
 
-`WasmScriptComponent` types should be registered with the App, using `add_wasm_script_component`.
+`WasmScriptComponent` types should be registered with the App, using `add_wasm_script_component`. This
+will ensure that the script assets are instantiated and usable. Instantiation happens only when the
+asset is loaded or reloaded.
  */
 pub trait WasmScriptComponent: Component {
     type ImportQueriedComponents: WorldQuery;
