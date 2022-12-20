@@ -1,6 +1,21 @@
 # bevy_wasm_scripting
 Adds support for wasm/wat assets in Bevy, and enables easy scripting.
 
+- [x] Scripts managed through bevy asset management
+- [x] Scripts attached to components
+- [x] Scripts attached to resources
+- [x] Hot-reloading of component and resource-based scripts
+- [x] [Basic examples](examples)
+- [ ] Confirm safety of `WorldPointer` imports strategy.
+- [ ] Investigate compilation performance and multi-threading options.
+- [ ] Investigate memory usage.
+- [ ] Investigate cooperation with web builds.
+- [ ] Configuration for Wasmer Tunables and Compiler.
+- [ ] Example game (probably a breakout clone with powerups)
+- [ ] Rust -> wasm script example
+- [ ] Lua -> wasm script example
+- [ ] Other language examples?
+
 # Examples
 For component-based scripts:
 ```rust
