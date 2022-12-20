@@ -1,12 +1,13 @@
 # bevy_wasm_scripting
 Adds support for wasm/wat assets in Bevy, and enables easy scripting. This is enabled through the [wasmer](https://github.com/wasmerio/wasmer) crate. 
 
+- [ ] Prepare for public use. This is very experimental! Please share any feedback in the Bevy Discord!
 - [x] Scripts managed through bevy asset management
 - [x] Scripts attached to components
 - [x] Scripts attached to resources
 - [x] Hot-reloading of component- and resource-based scripts
 - [x] [Basic examples](examples)
-- [ ] Harmonize resource- and component-based scripts, as they could both be simpler to define.
+- [x] Harmonize resource- and component-based scripts, as they could both be simpler to define.
 - [ ] Put this through its paces with a game project, to find pain points
 - [ ] Confirm safety of `WorldPointer` imports strategy.
 - [ ] Investigate compilation performance and multi-threading options.

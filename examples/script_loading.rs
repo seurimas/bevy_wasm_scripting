@@ -1,8 +1,5 @@
-use bevy::{
-    prelude::{info, App, AssetServer, Assets, Handle, Res, ResMut, Resource},
-    DefaultPlugins,
-};
-use bevy_wasm_scripting::{WasmPlugin, WasmScript};
+use bevy::{prelude::*, DefaultPlugins};
+use bevy_wasm_scripting::*;
 
 fn main() {
     App::new()

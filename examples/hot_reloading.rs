@@ -1,8 +1,5 @@
 use bevy::{prelude::*, DefaultPlugins};
-use bevy_wasm_scripting::{
-    GeneralWasmScriptEnv, WasmPlugin, WasmScript, WasmScriptComponent, WasmScriptComponentAdder,
-    WasmScriptComponentEnv,
-};
+use bevy_wasm_scripting::*;
 
 fn main() {
     App::new()

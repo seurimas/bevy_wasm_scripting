@@ -19,7 +19,9 @@ can take some time.
 However, for a WasmScript to become Instantiated and used, you must do one of the following:
 * Implement a WasmScriptComponent; register that component with `add_wasm_script_component`; and then
 add a component of that type, with the asset handle associated as per `get_wasm_script_handle`.
-* For resource-based scripts, add a system to your app, using `instantiate_resource_script`.
+* For resources with one associated script, implement WasmScriptResource and register that resource
+with `add_wasm_script_resource`.
+* For other resource-based scripts, add a system to your app, using `instantiate_resource_script`.
 * Call `instantiate_if_compiled` on the WasmScript directly. This will not work with hot reloading.
 
 Hot reloading is enabled for component and resource-based scripts, though there will be 1-2 frames in

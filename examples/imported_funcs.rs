@@ -1,8 +1,5 @@
 use bevy::{prelude::*, DefaultPlugins};
-use bevy_wasm_scripting::{
-    GeneralWasmScriptEnv, WasmPlugin, WasmScript, WasmScriptComponent, WasmScriptComponentAdder,
-    WasmScriptComponentEnv, WasmerStore, WorldPointer,
-};
+use bevy_wasm_scripting::*;
 use wasmer::{imports, Function, FunctionEnv, FunctionEnvMut};
 
 fn main() {

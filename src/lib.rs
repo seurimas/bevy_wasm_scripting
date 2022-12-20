@@ -12,10 +12,13 @@ mod resources;
 mod world_pointer;
 
 pub use assets::WasmScript;
-pub use calls::{GeneralWasmScriptEnv, WasmScriptComponentEnv, WasmScriptEnv};
-use components::instantiate_wasm_scripts;
+pub use calls::{
+    GeneralWasmScriptEnv, WasmScriptComponentEnv, WasmScriptEnv, WasmScriptResourceEnv,
+};
+use components::instantiate_wasm_component_scripts;
 pub use components::WasmScriptComponent;
-pub use resources::instantiate_resource_script;
+use resources::instantiate_wasm_resource_scripts;
+pub use resources::{instantiate_resource_script, WasmScriptResource};
 use wasmer::{Cranelift, Store};
 pub use world_pointer::WorldPointer;
 
@@ -44,14 +47,18 @@ impl Plugin for WasmPlugin {
     }
 }
 
-pub trait WasmScriptComponentAdder {
+pub trait WasmScriptAdder {
     fn add_wasm_script_component<S: WasmScriptComponent>(&mut self) -> &mut Self;
+    fn add_wasm_script_resource<R: WasmScriptResource>(&mut self) -> &mut Self;
 }
 
-impl WasmScriptComponentAdder for App {
+impl WasmScriptAdder for App {
     fn add_wasm_script_component<S: WasmScriptComponent>(&mut self) -> &mut Self {
-        self.add_system(instantiate_wasm_scripts::<S>);
-        self
+        self.add_system(instantiate_wasm_component_scripts::<S>)
+    }
+
+    fn add_wasm_script_resource<R: WasmScriptResource>(&mut self) -> &mut Self {
+        self.add_system(instantiate_wasm_resource_scripts::<R>)
     }
 }
 

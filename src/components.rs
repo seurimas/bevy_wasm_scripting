@@ -100,7 +100,7 @@ fn instantiate_if_compiled<S: WasmScriptComponent>(
     }
 }
 
-pub fn instantiate_wasm_scripts<S: WasmScriptComponent>(world: &mut World) {
+pub fn instantiate_wasm_component_scripts<S: WasmScriptComponent>(world: &mut World) {
     for script_asset in get_modified_script_assets::<S>(world) {
         if let Some((name, instance)) = instantiate_if_compiled::<S>(world, script_asset.clone()) {
             world

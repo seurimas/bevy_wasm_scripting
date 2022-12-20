@@ -1,8 +1,5 @@
 use bevy::{prelude::*, DefaultPlugins};
-use bevy_wasm_scripting::{
-    instantiate_resource_script, GeneralWasmScriptEnv, WasmPlugin, WasmScript, WasmScriptComponent,
-    WasmScriptComponentAdder, WasmScriptComponentEnv, WasmScriptEnv,
-};
+use bevy_wasm_scripting::*;
 
 fn main() {
     App::new()
@@ -12,13 +9,6 @@ fn main() {
         .add_wasm_script_component::<AdderScript>()
         .add_startup_system(spawn_script_entity)
         .add_system(call_script_on_entity)
-        // Resource-based scripts
-        .add_system(instantiate_resource_script::<AdderResourceScript>(
-            |resource: &AdderResourceScript| Some(resource.handle.clone()),
-            |_wasmer_store, _world_pointer| None,
-        ))
-        .add_startup_system(add_script_resource)
-        .add_system(call_script_on_resource)
         .run();
 }
 
@@ -61,35 +51,4 @@ fn call_script_on_entity(
         }
         println!("Accumulated value: {}", scripted_entity.accumulator);
     }
-}
-
-#[derive(Resource)]
-struct AdderResourceScript {
-    handle: Handle<WasmScript>,
-    accumulator: i32,
-}
-
-fn add_script_resource(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(AdderResourceScript {
-        // We're using a separate asset here, to demonstrate how to instantiate a script manually.
-        handle: asset_server.load("add_one_for_resource.wat"),
-        accumulator: 0,
-    });
-}
-
-fn call_script_on_resource(
-    mut script_resource: ResMut<AdderResourceScript>,
-    mut script_env: WasmScriptEnv,
-) {
-    if let Ok(new_val) = script_env.call_if_instantiated(
-        &script_resource.handle,
-        "main",
-        script_resource.accumulator,
-    ) {
-        script_resource.accumulator = new_val;
-    }
-    println!(
-        "Accumulated resource value: {}",
-        script_resource.accumulator
-    );
 }

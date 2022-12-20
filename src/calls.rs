@@ -7,7 +7,7 @@ use bevy::{
 };
 use wasmer::FromToNativeWasmType;
 
-use crate::{WasmScript, WasmScriptComponent, WasmerStore};
+use crate::{resources::WasmScriptResource, WasmScript, WasmScriptComponent, WasmerStore};
 
 /**
 The `WasmScriptComponentEnv` is the primary entry point for running scripts associated with components
@@ -34,8 +34,32 @@ pub struct WasmScriptComponentEnv<
 }
 
 /**
-The `WasmScriptEnv` is the primary entry point for running scripts associated with components
-on entities.
+The `WasmScriptResourceEnv` is the primary entry point for running scripts associated with resources.
+
+It is a `SystemParam` with two generic types:
+* First, the WasmScriptResource whose script may get run.
+* Second, an optional `ReadOnlyWorldQuery` which should consist of a tuple of `Without` query
+elements. This should be filled with any components which are referenced by the system directly.
+
+Within a system, the `call_if_instantiated` method can be used to execute an exported function.
+*/
+#[derive(SystemParam)]
+pub struct WasmScriptResourceEnv<
+    'w,
+    's,
+    WS: WasmScriptResource,
+    Without: ReadOnlyWorldQuery + 'static = (),
+> {
+    wasmer_store: ResMut<'w, WasmerStore>,
+    assets: Res<'w, Assets<WasmScript>>,
+    _used_components_query: Query<'w, 's, WS::ImportQueriedComponents, Without>,
+    pub resources: StaticSystemParam<'w, 's, WS::ImportResources>,
+}
+
+/**
+The `WasmScriptEnv` is another entry point for running scripts, similar to `WasmScriptComponentEnv`.
+It works for all scripts, and in situations where `WasmScriptComponentEnv` will not (multiple scripts
+in one system, resource-based scripts).
 
 SAFETY:
 Unlike `WasmScriptComponentEnv`, there are no automatic references to any components or references.
@@ -68,6 +92,19 @@ pub trait GeneralWasmScriptEnv {
 
 impl<'w, 's, WS: WasmScriptComponent, Without: ReadOnlyWorldQuery> GeneralWasmScriptEnv
     for WasmScriptComponentEnv<'w, 's, WS, Without>
+{
+    fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
+        &mut self,
+        handle: &Handle<WasmScript>,
+        function_name: &str,
+        args: Args,
+    ) -> Result<Rets, anyhow::Error> {
+        (&mut self.wasmer_store, &self.assets).call_if_instantiated(handle, function_name, args)
+    }
+}
+
+impl<'w, 's, WS: WasmScriptResource, Without: ReadOnlyWorldQuery> GeneralWasmScriptEnv
+    for WasmScriptResourceEnv<'w, 's, WS, Without>
 {
     fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
         &mut self,
