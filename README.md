@@ -4,8 +4,9 @@ Adds support for wasm/wat assets in Bevy, and enables easy scripting. This is en
 - [x] Scripts managed through bevy asset management
 - [x] Scripts attached to components
 - [x] Scripts attached to resources
-- [x] Hot-reloading of component and resource-based scripts
+- [x] Hot-reloading of component- and resource-based scripts
 - [x] [Basic examples](examples)
+- [ ] Harmonize resource- and component-based scripts, as they could both be simpler to define.
 - [ ] Put this through its paces with a game project, to find pain points
 - [ ] Confirm safety of `WorldPointer` imports strategy.
 - [ ] Investigate compilation performance and multi-threading options.
@@ -29,12 +30,6 @@ fn main() {
         .add_startup_system(spawn_script_entity)
         .add_system(call_script_on_entity)
     ...
-}
-
-#[derive(Resource)]
-struct AdderResourceScript {
-    handle: Handle<WasmScript>,
-    accumulator: i32,
 }
 
 impl WasmScriptComponent for AdderScript {
