@@ -37,15 +37,11 @@ fn add_script_resource(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn call_script_on_resource(mut script_env: WasmScriptResourceEnv<AdderResourceScript>) {
-    if let Ok(new_val) = script_env
-        .resources
-        .get_handle()
-        .ok_or(anyhow::anyhow!("No handle"))
-        .cloned()
-        .and_then(|handle| {
-            script_env.call_if_instantiated(&handle, "main", script_env.resources.accumulator)
-        })
-    {
+    if let Ok(new_val) = script_env.call_if_instantiated(
+        &script_env.resources.handle.clone(),
+        "main",
+        script_env.resources.accumulator,
+    ) {
         script_env.resources.accumulator = new_val;
     }
     println!(
