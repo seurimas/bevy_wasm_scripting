@@ -8,26 +8,22 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(WasmPlugin)
+        // Component-based scripts
+        .add_wasm_script_component::<AdderScript>()
         .add_startup_system(spawn_script_entity)
-        .add_startup_system(add_script_resource)
+        .add_system(call_script_on_entity)
+        // Resource-based scripts
         .add_system(instantiate_resource_script::<AdderResourceScript>(
             |resource: &AdderResourceScript| Some(resource.handle.clone()),
             |_wasmer_store, _world_pointer| None,
         ))
+        .add_startup_system(add_script_resource)
         .add_system(call_script_on_resource)
-        .add_system(call_script_on_entity)
-        .add_wasm_script_component::<AdderScript>()
         .run();
 }
 
 #[derive(Component)]
 struct AdderScript {
-    handle: Handle<WasmScript>,
-    accumulator: i32,
-}
-
-#[derive(Resource)]
-struct AdderResourceScript {
     handle: Handle<WasmScript>,
     accumulator: i32,
 }
@@ -51,14 +47,6 @@ fn spawn_script_entity(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn add_script_resource(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(AdderResourceScript {
-        // We're using a separate asset here, to demonstrate how to instantiate a script manually.
-        handle: asset_server.load("add_one_for_resource.wat"),
-        accumulator: 0,
-    });
-}
-
 fn call_script_on_entity(
     mut scripted_entities: Query<&mut AdderScript>,
     mut script_env: WasmScriptComponentEnv<AdderScript>,
@@ -73,6 +61,20 @@ fn call_script_on_entity(
         }
         println!("Accumulated value: {}", scripted_entity.accumulator);
     }
+}
+
+#[derive(Resource)]
+struct AdderResourceScript {
+    handle: Handle<WasmScript>,
+    accumulator: i32,
+}
+
+fn add_script_resource(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(AdderResourceScript {
+        // We're using a separate asset here, to demonstrate how to instantiate a script manually.
+        handle: asset_server.load("add_one_for_resource.wat"),
+        accumulator: 0,
+    });
 }
 
 fn call_script_on_resource(
