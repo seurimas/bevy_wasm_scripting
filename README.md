@@ -1,5 +1,5 @@
 # bevy_wasm_scripting
-Adds support for wasm/wat assets in Bevy, and enables easy scripting.
+Adds support for wasm/wat assets in Bevy, and enables easy scripting. This is enabled through the [wasmer](https://github.com/wasmerio/wasmer) crate. 
 
 - [x] Scripts managed through bevy asset management
 - [x] Scripts attached to components
@@ -10,7 +10,8 @@ Adds support for wasm/wat assets in Bevy, and enables easy scripting.
 - [ ] Investigate compilation performance and multi-threading options.
 - [ ] Investigate memory usage.
 - [ ] Investigate cooperation with web builds.
-- [ ] Configuration for Wasmer Tunables and Compiler.
+- [ ] Configuration for Wasmer Tunables.
+- [ ] Configuration for Wasmer compiler. (The `Cranelift` compiler is currently hardcoded.)
 - [ ] Example game (probably a breakout clone with powerups)
 - [ ] Rust -> wasm script example
 - [ ] Lua -> wasm script example
