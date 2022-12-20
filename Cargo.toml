@@ -2,6 +2,13 @@
 name = "bevy_wasm_scripting"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Adds support for wasm/wat assets in Bevy, and enables easy scripting."
+homepage = "https://github.com/seurimas/bevy_wasm_scripting"
+repository = "https://github.com/seurimas/bevy_wasm_scripting"
+readme = "README.md"
+keywords = ["bevy", "gamedev", "scripting", "wasm"]
+categories = ["game-development"]
 
 [lib]
 name = "bevy_wasm_scripting"
