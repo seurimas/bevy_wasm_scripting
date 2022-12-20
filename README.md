@@ -6,6 +6,7 @@ Adds support for wasm/wat assets in Bevy, and enables easy scripting. This is en
 - [x] Scripts attached to resources
 - [x] Hot-reloading of component and resource-based scripts
 - [x] [Basic examples](examples)
+- [ ] Put this through its paces with a game project, to find pain points
 - [ ] Confirm safety of `WorldPointer` imports strategy.
 - [ ] Investigate compilation performance and multi-threading options.
 - [ ] Investigate memory usage.
