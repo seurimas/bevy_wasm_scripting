@@ -37,7 +37,7 @@ fn add_script_resource(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn call_script_on_resource(mut script_env: WasmScriptResourceEnv<AdderResourceScript>) {
-    if let Ok(new_val) = script_env.call_if_instantiated(
+    if let Ok(new_val) = script_env.call_if_instantiated_1(
         &script_env.resources.handle.clone(),
         "main",
         script_env.resources.accumulator,

@@ -6,7 +6,9 @@ extern crate wasmer;
 extern crate wat;
 
 mod assets;
+#[macro_use]
 mod calls;
+mod commands;
 mod components;
 mod resources;
 mod world_pointer;
@@ -23,8 +25,8 @@ use wasmer::{Cranelift, Store};
 pub use world_pointer::WorldPointer;
 
 /** The `WasmerStore` is an essential item for the use of wasm scripts. However, it should not
-be referenced directly by systems. `WasmScriptEnv` and `WasmScriptComponentEnv` are better entry
-points for running scripts. */
+be referenced directly by systems. `WasmScriptEnv`, `WasmScriptComponentEnv`, and
+`WasmScriptResourceEnv` are better entry points for running scripts. */
 #[derive(Resource)]
 pub struct WasmerStore(pub Store);
 

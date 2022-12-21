@@ -5,7 +5,7 @@ use bevy::{
     },
     prelude::*,
 };
-use wasmer::FromToNativeWasmType;
+use wasmer::{FromToNativeWasmType, WasmTypeList};
 
 use crate::{resources::WasmScriptResource, WasmScript, WasmScriptComponent, WasmerStore};
 
@@ -82,85 +82,182 @@ pub trait GeneralWasmScriptEnv {
 
     Errors from the executed script function may also be returned.
     */
-    fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
+    fn call_if_instantiated_0<Rets: WasmTypeList>(
         &mut self,
         handle: &Handle<WasmScript>,
         function_name: &str,
-        args: Args,
     ) -> Result<Rets, anyhow::Error>;
+    fn call_if_instantiated_1<S0: FromToNativeWasmType, Rets: WasmTypeList>(
+        &mut self,
+        handle: &Handle<WasmScript>,
+        function_name: &str,
+        s0: S0,
+    ) -> Result<Rets, anyhow::Error>;
+    fn call_if_instantiated_2<
+        S0: FromToNativeWasmType,
+        S1: FromToNativeWasmType,
+        Rets: WasmTypeList,
+    >(
+        &mut self,
+        handle: &Handle<WasmScript>,
+        function_name: &str,
+        s0: S0,
+        s1: S1,
+    ) -> Result<Rets, anyhow::Error>;
+    fn call_if_instantiated_3<
+        S0: FromToNativeWasmType,
+        S1: FromToNativeWasmType,
+        S2: FromToNativeWasmType,
+        Rets: WasmTypeList,
+    >(
+        &mut self,
+        handle: &Handle<WasmScript>,
+        function_name: &str,
+        s0: S0,
+        s1: S1,
+        s2: S2,
+    ) -> Result<Rets, anyhow::Error>;
+    // fn call_if_instantiated_1<S0: FromToNativeWasmType, Rets: WasmTypeList>(
+    //     &mut self,
+    //     handle: &Handle<WasmScript>,
+    //     function_name: &str,
+    //     s0: S0,
+    // ) -> Result<Rets, anyhow::Error>;
+}
+
+macro_rules! impl_call_0 {
+    ($call_name:ident ) => {
+        fn $call_name<Rets: WasmTypeList>(
+            &mut self,
+            handle: &Handle<WasmScript>,
+            function_name: &str,
+        ) -> Result<Rets, anyhow::Error> {
+            self.assets
+                .get(handle)
+                .ok_or(anyhow::Error::msg("Asset not loaded"))
+                .and_then(|script| {
+                    if let WasmScript::Instantiated(_, instance) = script {
+                        if let Some(exported) = instance
+                            .exports
+                            .get_function(function_name)
+                            .ok()
+                            .and_then(|export| {
+                                export.typed::<(), Rets>(&mut self.wasmer_store.0).ok()
+                            })
+                        {
+                            exported
+                                .call(&mut self.wasmer_store.0)
+                                .map_err(anyhow::Error::new)
+                        } else {
+                            Err(anyhow::Error::msg(format!(
+                                "{} is not exported correctly.",
+                                function_name
+                            )))
+                        }
+                    } else {
+                        Err(anyhow::Error::msg("Script not instantiated yet."))
+                    }
+                })
+        }
+    };
+}
+
+macro_rules! impl_call_1 {
+    ($call_name:ident) => {
+        fn $call_name<Arg: FromToNativeWasmType, Rets: WasmTypeList>(
+            &mut self,
+            handle: &Handle<WasmScript>,
+            function_name: &str,
+            arg: Arg,
+        ) -> Result<Rets, anyhow::Error> {
+            self.assets
+                .get(handle)
+                .ok_or(anyhow::Error::msg("Asset not loaded"))
+                .and_then(|script| {
+                    if let WasmScript::Instantiated(_, instance) = script {
+                        if let Some(exported) = instance
+                            .exports
+                            .get_function(function_name)
+                            .ok()
+                            .and_then(|export| {
+                                export.typed::<Arg, Rets>(&mut self.wasmer_store.0).ok()
+                            })
+                        {
+                            exported
+                                .call(&mut self.wasmer_store.0, arg)
+                                .map_err(anyhow::Error::new)
+                        } else {
+                            Err(anyhow::Error::msg(format!(
+                                "{} is not exported correctly.",
+                                function_name
+                            )))
+                        }
+                    } else {
+                        Err(anyhow::Error::msg("Script not instantiated yet."))
+                    }
+                })
+        }
+    };
+}
+
+macro_rules! impl_calls {
+    ($call_name:ident, $( $x:ident ),* ) => {
+        #[allow(non_snake_case)]
+        fn $call_name<$($x: FromToNativeWasmType,)* Rets: WasmTypeList>(
+            &mut self,
+            handle: &Handle<WasmScript>,
+            function_name: &str,
+            $( $x: $x, )*
+        ) -> Result<Rets, anyhow::Error> {
+            self.assets
+                .get(handle)
+                .ok_or(anyhow::Error::msg("Asset not loaded"))
+                .and_then(|script| {
+                    if let WasmScript::Instantiated(_, instance) = script {
+                        if let Some(exported) = instance
+                            .exports
+                            .get_function(function_name)
+                            .ok()
+                            .and_then(|export| export.typed::<( $($x,)* ), Rets>(&mut self.wasmer_store.0).ok())
+                        {
+                            exported
+                                .call(&mut self.wasmer_store.0, $($x,)*)
+                                .map_err(anyhow::Error::new)
+                        } else {
+                            Err(anyhow::Error::msg(format!(
+                                "{} is not exported correctly.",
+                                function_name
+                            )))
+                        }
+                    } else {
+                        Err(anyhow::Error::msg("Script not instantiated yet."))
+                    }
+                })
+        }
+    };
 }
 
 impl<'w, 's, WS: WasmScriptComponent, Without: ReadOnlyWorldQuery> GeneralWasmScriptEnv
     for WasmScriptComponentEnv<'w, 's, WS, Without>
 {
-    fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
-        &mut self,
-        handle: &Handle<WasmScript>,
-        function_name: &str,
-        args: Args,
-    ) -> Result<Rets, anyhow::Error> {
-        (&mut self.wasmer_store, &self.assets).call_if_instantiated(handle, function_name, args)
-    }
+    impl_call_0!(call_if_instantiated_0);
+    impl_call_1!(call_if_instantiated_1);
+    impl_calls!(call_if_instantiated_2, S0, S1);
+    impl_calls!(call_if_instantiated_3, S0, S1, S2);
 }
 
 impl<'w, 's, WS: WasmScriptResource, Without: ReadOnlyWorldQuery> GeneralWasmScriptEnv
     for WasmScriptResourceEnv<'w, 's, WS, Without>
 {
-    fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
-        &mut self,
-        handle: &Handle<WasmScript>,
-        function_name: &str,
-        args: Args,
-    ) -> Result<Rets, anyhow::Error> {
-        (&mut self.wasmer_store, &self.assets).call_if_instantiated(handle, function_name, args)
-    }
+    impl_call_0!(call_if_instantiated_0);
+    impl_call_1!(call_if_instantiated_1);
+    impl_calls!(call_if_instantiated_2, S0, S1);
+    impl_calls!(call_if_instantiated_3, S0, S1, S2);
 }
 
 impl<'w, 's> GeneralWasmScriptEnv for WasmScriptEnv<'w, 's> {
-    fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
-        &mut self,
-        handle: &Handle<WasmScript>,
-        function_name: &str,
-        args: Args,
-    ) -> Result<Rets, anyhow::Error> {
-        (&mut self.wasmer_store, std::ops::Deref::deref(&self.assets)).call_if_instantiated(
-            handle,
-            function_name,
-            args,
-        )
-    }
-}
-
-impl<'w> GeneralWasmScriptEnv for (&mut ResMut<'w, WasmerStore>, &Res<'w, Assets<WasmScript>>) {
-    fn call_if_instantiated<Args: FromToNativeWasmType, Rets: FromToNativeWasmType>(
-        &mut self,
-        handle: &Handle<WasmScript>,
-        function_name: &str,
-        args: Args,
-    ) -> Result<Rets, anyhow::Error> {
-        self.1
-            .get(handle)
-            .ok_or(anyhow::Error::msg("Asset not loaded"))
-            .and_then(|script| {
-                if let WasmScript::Instantiated(_, instance) = script {
-                    if let Some(exported) = instance
-                        .exports
-                        .get_function(function_name)
-                        .ok()
-                        .and_then(|export| export.typed::<Args, Rets>(&mut self.0 .0).ok())
-                    {
-                        exported
-                            .call(&mut self.0 .0, args)
-                            .map_err(anyhow::Error::new)
-                    } else {
-                        Err(anyhow::Error::msg(format!(
-                            "{} is not exported correctly.",
-                            function_name
-                        )))
-                    }
-                } else {
-                    Err(anyhow::Error::msg("Script not instantiated yet."))
-                }
-            })
-    }
+    impl_call_0!(call_if_instantiated_0);
+    impl_call_1!(call_if_instantiated_1);
+    impl_calls!(call_if_instantiated_2, S0, S1);
+    impl_calls!(call_if_instantiated_3, S0, S1, S2);
 }

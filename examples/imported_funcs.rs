@@ -84,7 +84,7 @@ fn call_script_on_entity(
     for (entity, mut scripted_entity) in scripted_entities.iter_mut() {
         // Here, we're providing the entity id to the function, which is then used in an imported function.
         // Any function name can be used, as long as it is properly exported from wasm.
-        match script_env.call_if_instantiated(&scripted_entity.handle, "main", entity.to_bits()) {
+        match script_env.call_if_instantiated_1(&scripted_entity.handle, "main", entity.to_bits()) {
             Ok(new_val) => {
                 scripted_entity.accumulator = new_val;
                 println!(

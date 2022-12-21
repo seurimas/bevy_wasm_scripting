@@ -826,7 +826,6 @@ dependencies = [
  "anyhow",
  "bevy",
  "wasmer",
- "wasmer-compiler-cranelift",
  "wat",
 ]
 

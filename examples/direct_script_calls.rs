@@ -35,7 +35,7 @@ fn call_script_on_resource(
     mut script_resource: ResMut<AdderResourceScript>,
     mut script_env: WasmScriptEnv,
 ) {
-    if let Ok(new_val) = script_env.call_if_instantiated(
+    if let Ok(new_val) = script_env.call_if_instantiated_1(
         &script_resource.handle,
         "main",
         script_resource.accumulator,

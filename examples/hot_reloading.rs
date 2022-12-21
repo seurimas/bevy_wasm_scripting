@@ -41,7 +41,7 @@ fn call_script_on_entity(
     mut script_env: WasmScriptComponentEnv<AdderScript, ()>,
 ) {
     for mut scripted_entity in scripted_entities.iter_mut() {
-        if let Ok(new_val) = script_env.call_if_instantiated(
+        if let Ok(new_val) = script_env.call_if_instantiated_1(
             &scripted_entity.handle,
             "main",
             scripted_entity.accumulator,
