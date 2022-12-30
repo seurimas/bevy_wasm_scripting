@@ -36,6 +36,11 @@ pub enum WasmScript {
     Instantiated(String, Instance),
 }
 
+// Does this break everything? I bet this breaks everything.
+// There's a raw pointer in JS Modules that marks them as !Send and !Sync.
+unsafe impl Send for WasmScript {}
+unsafe impl Sync for WasmScript {}
+
 impl WasmScript {
     pub fn instantiate_if_compiled(
         &mut self,
@@ -51,6 +56,13 @@ impl WasmScript {
             }
         } else {
             false
+        }
+    }
+
+    pub fn name(&self) -> String {
+        match self {
+            Self::Loaded(name, _) | Self::Instantiated(name, _) => name.clone(),
+            Self::Compiled(module) => module.name().unwrap_or("").to_string(),
         }
     }
 }
@@ -114,9 +126,14 @@ pub(crate) fn compile_wasm_scripts(
     for asset in ev_asset_loaded.iter() {
         if let AssetEvent::Created { handle } | AssetEvent::Modified { handle } = asset {
             if let Some(WasmScript::Loaded(name, wasm_script)) = wasm_assets.get(&handle) {
-                if let Ok(mut module) = Module::new(&wasm_store.0, wasm_script) {
-                    module.set_name(name);
-                    wasm_assets.set_untracked(handle, WasmScript::Compiled(module));
+                match Module::new(&wasm_store.0, wasm_script) {
+                    Ok(mut module) => {
+                        module.set_name(name);
+                        wasm_assets.set_untracked(handle, WasmScript::Compiled(module));
+                    }
+                    Err(err) => {
+                        bevy::log::warn!("Could not compile {}: {}", name, err);
+                    }
                 }
             }
         }

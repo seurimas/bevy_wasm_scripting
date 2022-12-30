@@ -90,7 +90,7 @@ fn instantiate_if_compiled<S: WasmScriptComponent>(
             match S::instantiate(&world_pointer, &mut wasmer_store, module) {
                 Ok(instance) => Some((module.name().unwrap_or("").to_string(), instance)),
                 Err(err) => {
-                    println!("{:?}", err);
+                    bevy::log::warn!("Could not instantiate {}: {}", wasm_script.name(), err);
                     None
                 }
             }

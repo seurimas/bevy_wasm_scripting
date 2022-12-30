@@ -223,26 +223,30 @@ struct Scoreboard {
 /** NEW
  * Define some functions that the ball scripts can use!
  */
-fn get_velocity_x(env: FunctionEnvMut<WorldPointer>, entity_id: u64) -> f32 {
+fn get_velocity_x(env: FunctionEnvMut<WorldPointer>, entity_id: EntityId) -> f32 {
     env.data()
         .read()
-        .get::<Velocity>(Entity::from_bits(entity_id))
+        .get::<Velocity>(entity_id.to_entity())
         .cloned()
         .map(|vel| vel.0)
         .unwrap_or(0.0)
 }
 
-fn get_velocity_y(env: FunctionEnvMut<WorldPointer>, entity_id: u64) -> f32 {
+fn get_velocity_y(env: FunctionEnvMut<WorldPointer>, entity_id: EntityId) -> f32 {
     env.data()
         .read()
-        .get::<Velocity>(Entity::from_bits(entity_id))
+        .get::<Velocity>(entity_id.to_entity())
         .cloned()
         .map(|vel| vel.1)
         .unwrap_or(0.0)
 }
 
-fn set_velocity(env: FunctionEnvMut<WorldPointer>, entity_id: u64, vx: f32, vy: f32) {
-    if let Some(mut entity_velocity) = env.data().write().get_mut(Entity::from_bits(entity_id)) {
+fn set_velocity(env: FunctionEnvMut<WorldPointer>, entity_id: EntityId, vx: f32, vy: f32) {
+    if let Some(mut entity_velocity) = env
+        .data()
+        .write()
+        .get_mut::<Velocity>(entity_id.to_entity())
+    {
         *entity_velocity = Velocity(vx, vy);
     }
     println!("Setting {} {}", vx, vy);
@@ -250,12 +254,12 @@ fn set_velocity(env: FunctionEnvMut<WorldPointer>, entity_id: u64, vx: f32, vy: 
 
 fn spawn_new_ball(
     env: FunctionEnvMut<WorldPointer>,
-    entity_id: u64,
+    entity_id: EntityId,
     vx: f32,
     vy: f32,
     speed: f32,
-) -> u64 {
-    let entity = Entity::from_bits(entity_id);
+) -> EntityId {
+    let entity = entity_id.to_entity();
     let world_pointer = env.data();
     let mut commands = world_pointer.commands::<BallScript>();
     let mut meshes = world_pointer.write().resource_mut::<Assets<Mesh>>();
@@ -263,17 +267,19 @@ fn spawn_new_ball(
         .write()
         .resource_mut::<Assets<ColorMaterial>>();
     if let Some(ball_transform) = world_pointer.read().get::<Transform>(entity) {
-        spawn_ball(
-            &mut commands,
-            &mut meshes,
-            &mut materials,
-            ball_transform.translation,
-            (vx, vy),
-            speed,
+        f64::from_bits(
+            spawn_ball(
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+                ball_transform.translation,
+                (vx, vy),
+                speed,
+            )
+            .to_bits(),
         )
-        .to_bits()
     } else {
-        u64::MAX
+        f64::from_bits(u64::MAX)
     }
 }
 
@@ -335,19 +341,6 @@ fn setup(
         Collider,
     ));
 
-    // Ball
-    let ball = spawn_ball(
-        &mut commands,
-        meshes.as_mut(),
-        materials.as_mut(),
-        BALL_STARTING_POSITION,
-        INITIAL_BALL_DIRECTION.into(),
-        BALL_SPEED,
-    );
-    commands.entity(ball).insert(BallScript(
-        asset_server.load("breakout/scripts/gravity.wasm"),
-    ));
-
     // Scoreboard
     commands.spawn(
         TextBundle::from_sections([
@@ -375,6 +368,19 @@ fn setup(
             ..default()
         }),
     );
+
+    // Ball
+    let ball = spawn_ball(
+        &mut commands,
+        meshes.as_mut(),
+        materials.as_mut(),
+        BALL_STARTING_POSITION,
+        INITIAL_BALL_DIRECTION.into(),
+        BALL_SPEED,
+    );
+    commands.entity(ball).insert(BallScript(
+        asset_server.load("breakout/scripts/gravity.wasm"),
+    ));
 
     // Walls
     commands.spawn(WallBundle::new(WallLocation::Left));
@@ -481,13 +487,13 @@ fn ball_on_update_script(
     time: Res<Time>,
 ) {
     for (entity, script) in ball_query.iter() {
-        if let Err(err) = script_env.call_if_instantiated_2::<u64, f32, ()>(
+        if let Err(err) = script_env.call_if_instantiated_2::<f64, f32, ()>(
             &script.0,
             "on_update",
-            entity.to_bits(),
+            f64::from_bits(entity.to_bits()),
             time.delta_seconds(),
         ) {
-            println!("{:?}", err);
+            bevy::log::error!("Failed to run script: {}", err);
         }
     }
 }

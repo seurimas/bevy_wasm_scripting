@@ -10,6 +10,7 @@ mod assets;
 mod calls;
 mod commands;
 mod components;
+mod entity;
 mod resources;
 mod world_pointer;
 
@@ -17,11 +18,14 @@ pub use assets::WasmScript;
 pub use calls::{
     GeneralWasmScriptEnv, WasmScriptComponentEnv, WasmScriptEnv, WasmScriptResourceEnv,
 };
+pub use entity::*;
 use components::instantiate_wasm_component_scripts;
 pub use components::WasmScriptComponent;
 use resources::instantiate_wasm_resource_scripts;
 pub use resources::{instantiate_resource_script, WasmScriptResource};
-use wasmer::{Cranelift, Store};
+#[cfg(feature = "non-js")]
+use wasmer::Cranelift;
+use wasmer::Store;
 pub use world_pointer::WorldPointer;
 
 /** The `WasmerStore` is an essential item for the use of wasm scripts. However, it should not
@@ -31,8 +35,13 @@ be referenced directly by systems. `WasmScriptEnv`, `WasmScriptComponentEnv`, an
 pub struct WasmerStore(pub Store);
 
 impl FromWorld for WasmerStore {
+    #[cfg(feature = "non-js")]
     fn from_world(_world: &mut World) -> Self {
         WasmerStore(Store::new(Cranelift::default()))
+    }
+    #[cfg(feature = "js")]
+    fn from_world(_world: &mut World) -> Self {
+        WasmerStore(Store::new())
     }
 }
 

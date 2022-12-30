@@ -12,7 +12,7 @@ Adds support for wasm/wat assets in Bevy, and enables easy scripting. This is en
 - [ ] Confirm safety of `WorldPointer` imports strategy.
 - [ ] Investigate compilation performance and multi-threading options.
 - [ ] Investigate memory usage.
-- [ ] Investigate cooperation with web builds.
+- [x] Investigate cooperation with web builds.
 - [ ] Configuration for Wasmer Tunables.
 - [ ] Configuration for Wasmer compiler. (The `Cranelift` compiler is currently hardcoded.)
 - [ ] Example game (probably a breakout clone with powerups)
@@ -67,3 +67,12 @@ fn call_script_on_entity(
 ```
 
 More examples, for hot reloading, resource-based scripts, and script imports, are available in the [examples](examples) directory.
+
+# Web Build Example
+
+You can run the breakout example, very similar to the bevy examples:
+```sh
+cargo build --release --example breakout --target wasm32-unknown-unknown --features js --no-default-features
+wasm-bindgen --out-name wasm_example   --out-dir examples/wasm/target   --target web target/wasm32-unknown-unknown/release/examples/breakout.wasm
+basic-http-server examples/wasm
+```

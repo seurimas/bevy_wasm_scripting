@@ -10,12 +10,17 @@ readme = "README.md"
 keywords = ["bevy", "gamedev", "scripting", "wasm"]
 categories = ["game-development"]
 
+[features]
+default = ["non-js"]
+non-js = ["wasmer/sys-default"]
+js = ["wasmer/js-default"]
+
 [lib]
 name = "bevy_wasm_scripting"
 path = "src/lib.rs"
 
 [dependencies]
-wasmer = "3.0"
+wasmer = { version = "3", features = ["wat", "std"], default-features = false }
 wat = "1.0"
 anyhow = "1.0"
 bevy = "0.9"
