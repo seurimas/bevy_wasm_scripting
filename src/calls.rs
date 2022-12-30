@@ -171,45 +171,8 @@ pub trait GeneralWasmScriptEnv {
         S4::Native: NativeWasmTypeInto + FromToNativeWasmType;
 }
 
-macro_rules! impl_call_0 {
-    ($call_name:ident ) => {
-        fn $call_name<Rets: WasmTypeList>(
-            &mut self,
-            handle: &Handle<WasmScript>,
-            function_name: &str,
-        ) -> Result<Rets, anyhow::Error> {
-            self.assets
-                .get(handle)
-                .ok_or(anyhow::Error::msg("Asset not loaded"))
-                .and_then(|script| {
-                    if let WasmScript::Instantiated(_, instance) = script {
-                        match instance
-                            .exports
-                            .get_function(function_name)
-                            .map_err(anyhow::Error::new)
-                            .and_then(|export| {
-                                export
-                                    .typed::<(), Rets>(&mut self.wasmer_store.0)
-                                    .map_err(anyhow::Error::new)
-                            }) {
-                            Ok(exported) => exported
-                                .call(&mut self.wasmer_store.0)
-                                .map_err(anyhow::Error::new),
-                            Err(err) => Err(anyhow::Error::msg(format!(
-                                "{} is not exported correctly: {}",
-                                function_name, err
-                            ))),
-                        }
-                    } else {
-                        Err(anyhow::Error::msg("Script not instantiated yet."))
-                    }
-                })
-        }
-    };
-}
-
 macro_rules! impl_calls {
-    ($call_name:ident, $( $x:ident ),* ) => {
+    ($call_name:ident $( $x:ident ),* ) => {
         #[allow(non_snake_case, unused_parens)]
         fn $call_name<$($x: FromToNativeWasmType,)* Rets: WasmTypeList>(
             &mut self,
@@ -247,30 +210,30 @@ macro_rules! impl_calls {
 impl<'w, 's, WS: WasmScriptComponent, Without: ReadOnlyWorldQuery> GeneralWasmScriptEnv
     for WasmScriptComponentEnv<'w, 's, WS, Without>
 {
-    impl_call_0!(call_if_instantiated_0);
-    impl_calls!(call_if_instantiated_1, S0);
-    impl_calls!(call_if_instantiated_2, S0, S1);
-    impl_calls!(call_if_instantiated_3, S0, S1, S2);
-    impl_calls!(call_if_instantiated_4, S0, S1, S2, S3);
-    impl_calls!(call_if_instantiated_5, S0, S1, S2, S3, S4);
+    impl_calls!(call_if_instantiated_0);
+    impl_calls!(call_if_instantiated_1 S0);
+    impl_calls!(call_if_instantiated_2 S0, S1);
+    impl_calls!(call_if_instantiated_3 S0, S1, S2);
+    impl_calls!(call_if_instantiated_4 S0, S1, S2, S3);
+    impl_calls!(call_if_instantiated_5 S0, S1, S2, S3, S4);
 }
 
 impl<'w, 's, WS: WasmScriptResource, Without: ReadOnlyWorldQuery> GeneralWasmScriptEnv
     for WasmScriptResourceEnv<'w, 's, WS, Without>
 {
-    impl_call_0!(call_if_instantiated_0);
-    impl_calls!(call_if_instantiated_1, S0);
-    impl_calls!(call_if_instantiated_2, S0, S1);
-    impl_calls!(call_if_instantiated_3, S0, S1, S2);
-    impl_calls!(call_if_instantiated_4, S0, S1, S2, S3);
-    impl_calls!(call_if_instantiated_5, S0, S1, S2, S3, S4);
+    impl_calls!(call_if_instantiated_0);
+    impl_calls!(call_if_instantiated_1 S0);
+    impl_calls!(call_if_instantiated_2 S0, S1);
+    impl_calls!(call_if_instantiated_3 S0, S1, S2);
+    impl_calls!(call_if_instantiated_4 S0, S1, S2, S3);
+    impl_calls!(call_if_instantiated_5 S0, S1, S2, S3, S4);
 }
 
 impl<'w, 's> GeneralWasmScriptEnv for WasmScriptEnv<'w, 's> {
-    impl_call_0!(call_if_instantiated_0);
-    impl_calls!(call_if_instantiated_1, S0);
-    impl_calls!(call_if_instantiated_2, S0, S1);
-    impl_calls!(call_if_instantiated_3, S0, S1, S2);
-    impl_calls!(call_if_instantiated_4, S0, S1, S2, S3);
-    impl_calls!(call_if_instantiated_5, S0, S1, S2, S3, S4);
+    impl_calls!(call_if_instantiated_0);
+    impl_calls!(call_if_instantiated_1 S0);
+    impl_calls!(call_if_instantiated_2 S0, S1);
+    impl_calls!(call_if_instantiated_3 S0, S1, S2);
+    impl_calls!(call_if_instantiated_4 S0, S1, S2, S3);
+    impl_calls!(call_if_instantiated_5 S0, S1, S2, S3, S4);
 }
