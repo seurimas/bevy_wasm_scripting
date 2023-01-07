@@ -8,11 +8,17 @@ use bevy::{
     prelude::*,
 };
 
-#[derive(Default, Resource)]
+#[derive(Resource)]
 pub struct ScriptCommandQueue<ScriptType: 'static + Sync + Send>(
     pub(crate) CommandQueue,
     PhantomData<ScriptType>,
 );
+
+impl<ScriptType: 'static + Sync + Send> Default for ScriptCommandQueue<ScriptType> {
+    fn default() -> Self {
+        Self(Default::default(), PhantomData)
+    }
+}
 
 pub struct ScriptSystemWithCommands<F, ScriptType>
 where
@@ -21,6 +27,15 @@ where
 {
     base_system: F,
     marker: PhantomData<ScriptType>,
+}
+
+impl<F: System, ScriptType: 'static + Send + Sync> ScriptSystemWithCommands<F, ScriptType> {
+    pub fn wrap(f: F) -> Self {
+        Self {
+            base_system: f,
+            marker: PhantomData,
+        }
+    }
 }
 
 impl<F: System, ScriptType: 'static + Send + Sync> System

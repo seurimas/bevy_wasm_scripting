@@ -75,6 +75,19 @@ fn get_modified_script_assets<S: WasmScriptComponent>(
     result
 }
 
+fn get_added_script_assets<S: WasmScriptComponent>(world: &mut World) -> Vec<Handle<WasmScript>> {
+    let mut s_handles = HashSet::new();
+    {
+        for changed in world
+            .query_filtered::<&S, Or<(Changed<S>, Added<S>)>>()
+            .iter(world)
+        {
+            s_handles.insert(changed.get_wasm_script_handle().clone());
+        }
+    }
+    s_handles.drain().collect::<Vec<Handle<WasmScript>>>()
+}
+
 fn instantiate_if_compiled<S: WasmScriptComponent>(
     world: &mut World,
     wasm_script_handle: Handle<WasmScript>,
@@ -87,10 +100,11 @@ fn instantiate_if_compiled<S: WasmScriptComponent>(
         let wasm_script = wasm_assets.get(&wasm_script_handle)?;
         let mut wasmer_store = world.get_resource_unchecked_mut::<WasmerStore>()?;
         if let WasmScript::Compiled(module) = wasm_script {
+            bevy::log::warn!("Received compiled module {}...", wasm_script.name());
             match S::instantiate(&world_pointer, &mut wasmer_store, module) {
                 Ok(instance) => Some((module.name().unwrap_or("").to_string(), instance)),
                 Err(err) => {
-                    bevy::log::warn!("Could not instantiate {}: {}", wasm_script.name(), err);
+                    bevy::log::error!("Could not instantiate {}: {}", wasm_script.name(), err);
                     None
                 }
             }
@@ -102,6 +116,14 @@ fn instantiate_if_compiled<S: WasmScriptComponent>(
 
 pub fn instantiate_wasm_component_scripts<S: WasmScriptComponent>(world: &mut World) {
     for script_asset in get_modified_script_assets::<S>(world) {
+        if let Some((name, instance)) = instantiate_if_compiled::<S>(world, script_asset.clone()) {
+            world
+                .get_resource_mut::<Assets<WasmScript>>()
+                .unwrap()
+                .set_untracked(script_asset, WasmScript::Instantiated(name, instance));
+        }
+    }
+    for script_asset in get_added_script_assets::<S>(world) {
         if let Some((name, instance)) = instantiate_if_compiled::<S>(world, script_asset.clone()) {
             world
                 .get_resource_mut::<Assets<WasmScript>>()

@@ -18,9 +18,11 @@ pub use assets::WasmScript;
 pub use calls::{
     GeneralWasmScriptEnv, WasmScriptComponentEnv, WasmScriptEnv, WasmScriptResourceEnv,
 };
-pub use entity::*;
+use commands::ScriptCommandQueue;
+pub use commands::ScriptSystemWithCommands;
 use components::instantiate_wasm_component_scripts;
 pub use components::WasmScriptComponent;
+pub use entity::*;
 use resources::instantiate_wasm_resource_scripts;
 pub use resources::{instantiate_resource_script, WasmScriptResource};
 #[cfg(feature = "non-js")]
@@ -66,10 +68,12 @@ pub trait WasmScriptAdder {
 impl WasmScriptAdder for App {
     fn add_wasm_script_component<S: WasmScriptComponent>(&mut self) -> &mut Self {
         self.add_system(instantiate_wasm_component_scripts::<S>)
+            .init_resource::<ScriptCommandQueue<S>>()
     }
 
     fn add_wasm_script_resource<R: WasmScriptResource>(&mut self) -> &mut Self {
         self.add_system(instantiate_wasm_resource_scripts::<R>)
+            .init_resource::<ScriptCommandQueue<R>>()
     }
 }
 
