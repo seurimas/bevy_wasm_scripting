@@ -1,13 +1,11 @@
 // This example is modified from https://github.com/bevyengine/bevy/blob/latest/examples/games/breakout.rs
 // Non-trivial points which differ for this example will be marked as NEW.
 use bevy::{
-    ecs::system::CommandQueue,
     prelude::*,
     sprite::{
         collide_aabb::{collide, Collision},
         MaterialMesh2dBundle,
     },
-    time::FixedTimestep,
     DefaultPlugins,
 };
 use bevy_wasm_scripting::*;
@@ -63,15 +61,24 @@ fn main() {
         .add_plugin(WasmPlugin)
         .insert_resource(Scoreboard { score: 0 })
         .insert_resource(ClearColor(BACKGROUND_COLOR))
+        .insert_resource(FixedTime::new_from_secs(TIME_STEP))
         .add_startup_system(setup)
         .add_event::<CollisionEvent>()
-        .add_system_set(
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
-                .with_system(check_for_collisions)
-                .with_system(move_paddle.before(check_for_collisions))
-                .with_system(apply_velocity.before(check_for_collisions))
-                .with_system(play_collision_sound.after(check_for_collisions)),
+        .add_system(check_for_collisions.in_schedule(CoreSchedule::FixedUpdate))
+        .add_system(
+            move_paddle
+                .in_schedule(CoreSchedule::FixedUpdate)
+                .before(check_for_collisions),
+        )
+        .add_system(
+            apply_velocity
+                .in_schedule(CoreSchedule::FixedUpdate)
+                .before(check_for_collisions),
+        )
+        .add_system(
+            play_collision_sound
+                .in_schedule(CoreSchedule::FixedUpdate)
+                .after(check_for_collisions),
         )
         .add_system(update_scoreboard)
         .add_system(bevy::window::close_on_esc)
@@ -563,7 +570,7 @@ fn check_for_collisions(
 }
 
 fn play_collision_sound(
-    collision_events: EventReader<CollisionEvent>,
+    mut collision_events: EventReader<CollisionEvent>,
     audio: Res<Audio>,
     sound: Res<CollisionSound>,
 ) {

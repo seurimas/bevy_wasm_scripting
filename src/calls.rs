@@ -29,8 +29,9 @@ pub struct WasmScriptComponentEnv<
 > {
     wasmer_store: ResMut<'w, WasmerStore>,
     assets: Res<'w, Assets<WasmScript>>,
-    _used_components_query: Query<'w, 's, WS::ImportQueriedComponents, Without>,
-    pub resources: StaticSystemParam<'w, 's, WS::ImportResources>,
+    _used_components_query:
+        Query<'w, 's, <WS as WasmScriptComponent>::ImportQueriedComponents, Without>,
+    pub resources: StaticSystemParam<'w, 's, <WS as WasmScriptComponent>::ImportResources>,
 }
 
 /**
@@ -52,8 +53,9 @@ pub struct WasmScriptResourceEnv<
 > {
     wasmer_store: ResMut<'w, WasmerStore>,
     assets: Res<'w, Assets<WasmScript>>,
-    _used_components_query: Query<'w, 's, WS::ImportQueriedComponents, Without>,
-    pub resources: StaticSystemParam<'w, 's, WS::ImportResources>,
+    _used_components_query:
+        Query<'w, 's, <WS as WasmScriptResource>::ImportQueriedComponents, Without>,
+    pub resources: StaticSystemParam<'w, 's, <WS as WasmScriptResource>::ImportResources>,
 }
 
 /**

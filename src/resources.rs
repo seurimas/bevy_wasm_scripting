@@ -1,6 +1,10 @@
 use anyhow::anyhow;
 use bevy::{
-    ecs::{event::ManualEventReader, query::WorldQuery, system::SystemParam},
+    ecs::{
+        event::ManualEventReader,
+        query::WorldQuery,
+        system::{SystemParam, SystemState},
+    },
     prelude::*,
 };
 use wasmer::{imports, Imports, Instance, Module};
@@ -25,15 +29,12 @@ fn instantiate_if_compiled(
     // Need to figure out how world access actually works and how long we can keep a WorldPointer around...
     unsafe {
         let mut world_pointer = WorldPointer::new(world).clone();
-        let mut wasm_assets = world
-            .get_resource_unchecked_mut::<Assets<WasmScript>>()
-            .ok_or(anyhow!("Assets<WasmScript> missing"))?;
+        let mut state =
+            SystemState::<(ResMut<Assets<WasmScript>>, ResMut<WasmerStore>)>::new(world);
+        let (mut wasm_assets, mut wasmer_store) = state.get_mut(world);
         let wasm_script = wasm_assets
             .get_mut(&wasm_script_handle)
             .ok_or(anyhow!("Asset not properly loaded?"))?;
-        let mut wasmer_store = world
-            .get_resource_unchecked_mut::<WasmerStore>()
-            .ok_or(anyhow!("WasmerStore missing"))?;
         if let WasmScript::Compiled(module) = wasm_script {
             let imports = &get_imports(&mut wasmer_store, &mut world_pointer);
             match instantiate_with_imports(&mut wasmer_store, module, imports) {

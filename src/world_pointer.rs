@@ -3,11 +3,11 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use bevy::prelude::{Commands, World};
+use bevy::prelude::{Commands, Resource, World};
 
 use crate::commands::ScriptCommandQueue;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Resource)]
 pub struct WorldPointer(pub Arc<RwLock<*mut World>>);
 
 unsafe impl Send for WorldPointer {}
@@ -34,7 +34,7 @@ impl WorldPointer {
             // SAFETY: I don't know. I'm still winging it at this point.
             let world = self.write();
             let command_queue = world
-                .get_resource_unchecked_mut::<ScriptCommandQueue<ScriptType>>()
+                .get_resource_mut::<ScriptCommandQueue<ScriptType>>()
                 .expect(
                     format!(
                         "No ScriptCommandQueue<{}> found.",
@@ -42,6 +42,7 @@ impl WorldPointer {
                     )
                     .as_str(),
                 );
+            let world = self.write();
             Commands::new(&mut command_queue.into_inner().0, world)
         }
     }

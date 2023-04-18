@@ -1,5 +1,10 @@
+use anyhow::anyhow;
 use bevy::{
-    ecs::{event::ManualEventReader, query::WorldQuery, system::SystemParam},
+    ecs::{
+        event::ManualEventReader,
+        query::WorldQuery,
+        system::{SystemParam, SystemState},
+    },
     prelude::*,
     utils::HashSet,
 };
@@ -96,15 +101,20 @@ fn instantiate_if_compiled<S: WasmScriptComponent>(
     // Need to figure out how world access actually works and how long we can keep a WorldPointer around...
     unsafe {
         let world_pointer = WorldPointer::new(world).clone();
-        let wasm_assets = world.get_resource_unchecked_mut::<Assets<WasmScript>>()?;
-        let wasm_script = wasm_assets.get(&wasm_script_handle)?;
-        let mut wasmer_store = world.get_resource_unchecked_mut::<WasmerStore>()?;
+        let mut state =
+            SystemState::<(ResMut<Assets<WasmScript>>, ResMut<WasmerStore>)>::new(world);
+        let (mut wasm_assets, mut wasmer_store) = state.get_mut(world);
+        let wasm_script = wasm_assets.get_mut(&wasm_script_handle)?;
+        let name = wasm_script.name();
         if let WasmScript::Compiled(module) = wasm_script {
-            bevy::log::warn!("Received compiled module {}...", wasm_script.name());
+            bevy::log::warn!("Received compiled module {}...", name);
             match S::instantiate(&world_pointer, &mut wasmer_store, module) {
-                Ok(instance) => Some((module.name().unwrap_or("").to_string(), instance)),
+                Ok(instance) => {
+                    bevy::log::warn!("Instantiated module {}...", name);
+                    Some((module.name().unwrap_or("").to_string(), instance))
+                }
                 Err(err) => {
-                    bevy::log::error!("Could not instantiate {}: {}", wasm_script.name(), err);
+                    bevy::log::error!("Could not instantiate {}: {}", name, err);
                     None
                 }
             }

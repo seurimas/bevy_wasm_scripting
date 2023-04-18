@@ -1,5 +1,8 @@
 use assets::{compile_wasm_scripts, WasmAssetLoader, WatAssetLoader};
-use bevy::prelude::{AddAsset, App, CoreStage, FromWorld, Plugin, Resource, World};
+use bevy::prelude::{
+    AddAsset, App, CoreSet, FromWorld, IntoSystemAppConfig, IntoSystemConfig, Plugin, Resource,
+    World,
+};
 
 extern crate anyhow;
 extern crate wasmer;
@@ -56,7 +59,7 @@ impl Plugin for WasmPlugin {
             .init_resource::<WasmerStore>()
             .add_asset_loader(WasmAssetLoader)
             .add_asset_loader(WatAssetLoader)
-            .add_system_to_stage(CoreStage::Last, compile_wasm_scripts);
+            .add_system(compile_wasm_scripts.in_base_set(CoreSet::Last));
     }
 }
 

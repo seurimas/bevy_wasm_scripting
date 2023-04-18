@@ -95,4 +95,8 @@ impl<F: System, ScriptType: 'static + Send + Sync> System
     fn set_last_change_tick(&mut self, last_change_tick: u32) {
         self.base_system.set_last_change_tick(last_change_tick)
     }
+
+    fn type_id(&self) -> TypeId {
+        TypeId::of::<F>()
+    }
 }

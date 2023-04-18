@@ -23,4 +23,4 @@ path = "src/lib.rs"
 wasmer = { version = "3", features = ["wat", "std"], default-features = false }
 wat = "1.0"
 anyhow = "1.0"
-bevy = "0.9"
+bevy = "0.10"
